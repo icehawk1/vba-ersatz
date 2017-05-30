@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-from flask import Flask, request
-from flask_restful import Resource, Api
-from DataModel import Templates
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
+from DataModel import Templates
 
 if __name__ == '__main__':
     app = Flask(__name__)
@@ -12,9 +11,6 @@ if __name__ == '__main__':
     db = SQLAlchemy()
     db.init_app(app)
     db.create_all() # <----
-
-    api = Api(app)
-    api.add_resource(TodoSimple, '/<string:todo_name>')
 
     templates = Templates.query.all()
     print(templates)
