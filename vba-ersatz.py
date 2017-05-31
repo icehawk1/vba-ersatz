@@ -7,12 +7,17 @@ from flask_restful import Resource, Api, reqparse, request
 import DataModel
 
 app = Flask(__name__)
+gruppen_argparser = reqparse.RequestParser()
+gruppen_argparser.add_argument('nummer', type=int, help='Nummer der Gruppe')
+gruppen_argparser.add_argument('name', type=str, help='Name der Gruppe')
+gruppen_argparser.add_argument('status', type=str, help='Status der Gruppe')
 
 def createApi():
     api = Api(app)
     api.add_resource(Homepage, '/', "/index.html")
     api.add_resource(About, '/about', "/about.html")
-    api.add_resource(Gruppe, "/gruppe/<int:nummer>", "/gruppe/<int:gid>/<string:command>")
+    api.add_resource(NeueGruppe, "/gruppe", "/gruppe/")
+    api.add_resource(Gruppe, "/gruppe/<int:gid>", "/gruppe/<int:gid>/<string:command>")
     return api
 
 
@@ -36,12 +41,31 @@ class Homepage(Resource):
         return result
 
 
+class NeueGruppe(Resource):
+    """Resource zum anlegen einer neuben Gruppe. Dies wird getrennt von der Resource zum bearbeiten von spezifischen Gruppen geführt,
+    da es sonst leicht zu versehentlichen Änderungen an bestehenden Gruppen, bzw. versehentlichem neu anlegen kommen kann."""
+
+    def get(self):
+        result = render_template("neue_gruppe.html")
+        return result
+
+    def post(self):
+        args = gruppen_argparser.parse_args()
+        if db_session.query(DataModel.Gruppe).filter(DataModel.Gruppe.nummer == args["nummer"]).count() > 0:
+            return "Gruppe %d existiert bereits" % args["nummer"], 409
+
+        neueGruppe = DataModel.Gruppe(nummer=args["nummer"], name=args["name"], status=args["status"])
+        db_session.add(neueGruppe)
+        db_session.commit()
+
+        return "Gruppe wurde angelegt"
+
 class Gruppe(Resource):
-    def get(self, nummer, command="edit"):
-        app.logger.debug("GET: %s gruppe %d" % (command, nummer))
+    def get(self, gid, command="edit"):
+        app.logger.debug("GET: %s gruppe %d" % (command, gid))
         app.logger.debug("header: %s" % request.headers.get("Accept"))
 
-        gruppe = db_session.query(DataModel.Gruppe).filter(DataModel.Gruppe.nummer == nummer).first()
+        gruppe = db_session.query(DataModel.Gruppe).filter(DataModel.Gruppe.gid == gid).first()
         if gruppe is not None:
             if "/html" in request.headers["Accept"]:
                 result = render_template("gruppe.html", gruppe=gruppe)
@@ -51,17 +75,15 @@ class Gruppe(Resource):
                 result = "Inkompatibler Accept-Header: %s" % request.headers["Accept"]
             return result
         else:
-            return "Gruppe %d existiert nicht" % nummer, 404
+            return "Gruppe %d existiert nicht" % gid, 404
 
-    def post(self, nummer, command="edit"):
-        app.logger.debug("POST: %s gruppe %d" % (command, nummer))
+    def post(self, gid, command="edit"):
+        args = gruppen_argparser.parse_args()
 
-        parser = reqparse.RequestParser()
-        parser.add_argument('name', type=str, help='Name der Gruppe')
-        parser.add_argument('status', type=str, help='Status der Gruppe')
-        args = parser.parse_args()
+        if db_session.query(DataModel.Gruppe).filter(DataModel.Gruppe.nummer == args["nummer"]).count() > 0:
+            return "Gruppe %d existiert noch nicht" % args["nummer"], 404
 
-        neueGruppe = DataModel.Gruppe(nummer=nummer, name=args["name"], status=args["status"])
+        neueGruppe = DataModel.Gruppe(nummer=gid, name=args["name"], status=args["status"])
         db_session.add(neueGruppe)
         db_session.commit()
 

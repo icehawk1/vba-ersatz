@@ -13,7 +13,7 @@ def createDB(app):
     engine = create_engine('sqlite:////tmp/test.db', echo=False)
     SessionMaker = sessionmaker(bind=engine)
     session = SessionMaker()
-    Base.metadata.drop_all(engine)
+    # Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     return engine, session
 
