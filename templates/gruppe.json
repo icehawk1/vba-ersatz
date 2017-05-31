@@ -1,0 +1,6 @@
+{
+  "gid": "{{ gruppe.gid }}",
+  "nummer": "{{ gruppe.nummer }}",
+  "name": "{{ gruppe.name }}",
+  "status": "{{ gruppe.status }}"
+}
