@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
 from enum import Enum
-from sqlalchemy.ext.orderinglist import ordering_list
-from flask_sqlalchemy import SQLAlchemy
 
-#db = SQLAlchemy()
+import sqlalchemy
+from sqlalchemy import Integer, String, Column, ForeignKey, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.orderinglist import ordering_list
+from sqlalchemy.orm import relationship, sessionmaker
+
+Base = declarative_base()
+
+
+def createDB(app):
+    engine = create_engine('sqlite:////tmp/test.db', echo=False)
+    SessionMaker = sessionmaker(bind=engine)
+    session = SessionMaker()
+    Base.metadata.create_all(engine)
+    return engine, session
 
 class _Status(Enum):
     """Enum der festlegt in welchen Zuständen ein Testcase oder eine Gruppe sein kann"""
@@ -11,31 +23,38 @@ class _Status(Enum):
     implemented = 2 # Wurde implementiert, aber noch nicht an Microsens ausgeliefert
     released = 3 # Wurde an Microsens ausgeliefert
 
-class Gruppe(db.Model):
+
+class Gruppe(Base):
     """Eine Gruppe von Testcases die gemeinsam ausgeführt wird und üblicherweise immer einen Namespace abdeckt"""
-    gid = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), unique=True, nullable=False, doc="Der Name dieser Gruppe")
-    testcases = db.relationship("Testcase", doc="Die zu dieser Gruppe gehörenden Testcases. Ein Testcase kann immer nur zu einer Gruppe gehören.")
-    status = db.Column(db.Enum("_Status"), doc="Ob die Gruppe bereits implementiert/released wurde oder ob dies noch ein TODO ist")
+    __tablename__ = 'gruppen'
+    gid = Column(Integer, primary_key=True)
+    name = Column(String(120), unique=True, nullable=False, doc="Der Name dieser Gruppe")
+    testcases = relationship("Testcase",
+                             doc="Die zu dieser Gruppe gehörenden Testcases. Ein Testcase kann immer nur zu einer Gruppe gehören.")
+    status = Column(sqlalchemy.Enum("_Status"),
+                    doc="Ob die Gruppe bereits implementiert/released wurde oder ob dies noch ein TODO ist")
 
-class Testcase(db.Model):
-    tid = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False, doc="Der Testcasename wie im Testplan")
-    status = db.Column(db.Enum(_Status), doc="Ob der Testcase bereits implementiert/released wurde oder ob dies noch ein TODO ist")
-    gid = db.Column(db.Integer, db.ForeignKey("gruppe.gid"))
-    parameters = db.relationship("TestcaseParameter", collection_class=ordering_list('num'))
 
-class TestcaseParameter(db.Model):
-    tpid = db.Column(db.Integer,primary_key=True)
-    value = db.Column(db.String(2048), nullable=False, doc="Der Wert dieses Parameters, wie er im Testplan auftauchen wird")
-    num = db.Column(db.Integer, doc="Dient dazu, die Reihenfolge der Parameter in der DB zu speichern.")
-    tid = db.Column(db.Integer, db.ForeignKey("testcase.tid"))
+class Testcase(Base):
+    __tablename__ = 'testcases'
+    tid = Column(Integer, primary_key=True)
+    name = Column(String(120), nullable=False, doc="Der Testcasename wie im Testplan")
+    status = Column(sqlalchemy.Enum("_Status"),
+                    doc="Ob der Testcase bereits implementiert/released wurde oder ob dies noch ein TODO ist")
+    gid = Column(Integer, ForeignKey(Gruppe.__tablename__ + ".gid"))
+    parameters = relationship("TestcaseParameter", collection_class=ordering_list('num'))
 
-class Templates(db.Model):
-    tid = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), unique=True)
-    beschreibung = db.Column(db.String(2048), doc="Nähere Beschreibung wie dieses Template anzuwenden ist.")
 
-if __name__ == "__main__":
-    print("DataModel")
+class TestcaseParameter(Base):
+    __tablename__ = 'parameters'
+    tpid = Column(Integer, primary_key=True)
+    value = Column(String(2048), nullable=False, doc="Der Wert dieses Parameters, wie er im Testplan auftauchen wird")
+    num = Column(Integer, doc="Dient dazu, die Reihenfolge der Parameter in der DB zu speichern.")
+    tid = Column(Integer, ForeignKey(Testcase.__tablename__ + ".tid"))
 
+
+class Templates(Base):
+    __tablename__ = 'templates'
+    tid = Column(Integer, primary_key=True)
+    name = Column(String(120), unique=True, nullable=False)
+    beschreibung = Column(String(2048), nullable=True, doc="Nähere Beschreibung wie dieses Template anzuwenden ist.")
