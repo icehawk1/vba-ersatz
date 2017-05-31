@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import flask
-from flask import Flask, make_response
+from flask import Flask, make_response, redirect
 from flask_restful import Resource, Api, reqparse, request
 
 import DataModel
@@ -46,7 +46,7 @@ class NeueGruppe(Resource):
     da es sonst leicht zu versehentlichen Änderungen an bestehenden Gruppen, bzw. versehentlichem neu anlegen kommen kann."""
 
     def get(self):
-        result = render_template("neue_gruppe.html")
+        result = render_template("neue_gruppe.html", stati=DataModel.stati)
         return result
 
     def post(self):
@@ -58,7 +58,7 @@ class NeueGruppe(Resource):
         db_session.add(neueGruppe)
         db_session.commit()
 
-        return "Gruppe wurde angelegt"
+        return redirect("/gruppe/%d" % neueGruppe.gid, code=302)
 
 class Gruppe(Resource):
     def get(self, gid, command="edit"):

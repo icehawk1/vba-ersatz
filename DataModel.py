@@ -29,14 +29,14 @@ class Gruppe(Base):
     name = Column(String(120), unique=True, nullable=False, doc="Der Name dieser Gruppe")
     testcases = relationship("Testcase",
                              doc="Die zu dieser Gruppe gehörenden Testcases. Ein Testcase kann immer nur zu einer Gruppe gehören.")
-    status = Column(sqlalchemy.Enum(*stati),
+    status = Column(sqlalchemy.Enum(*stati), unique=False,
                     doc="Ob die Gruppe bereits implementiert/released wurde oder ob dies noch ein TODO ist")
 
 class Testcase(Base):
     __tablename__ = 'testcases'
     tid = Column(Integer, primary_key=True)
     name = Column(String(120), nullable=False, doc="Der Testcasename wie im Testplan")
-    status = Column(sqlalchemy.Enum(*stati),
+    status = Column(sqlalchemy.Enum(*stati), unique=False,
                     doc="Ob der Testcase bereits implementiert/released wurde oder ob dies noch ein TODO ist")
     gid = Column(Integer, ForeignKey(Gruppe.__tablename__ + ".gid"))
     parameters = relationship("TestcaseParameter", collection_class=ordering_list('num'))

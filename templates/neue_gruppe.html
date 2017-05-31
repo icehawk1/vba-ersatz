@@ -6,5 +6,24 @@
 </head>
 <body>
 
+<form action="/gruppe" method="post" id="neue_gruppe">
+    <label class="h1" form="neue_gruppe">Neue Gruppe anlegen</label><br/>
+
+    <label for="nummer">Nummer</label>
+    <input type="number" name="nummer" id="nummer" maxlength="10"><br/>
+
+    <label for="name">Gruppenname</label>
+    <input type="text" name="name" id="name" maxlength="120"><br/>
+
+    <label for="status">Gruppenname</label>
+    <select name="status" id="status" size="{{ stati|length }}">
+        {% for item in stati %}
+        <option>{{ item }}</option>
+        {% endfor %}
+    </select><br/>
+
+    <button type="submit">Neue Gruppe erstellen</button>
+</form>
+
 </body>
 </html>
