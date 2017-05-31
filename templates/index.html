@@ -4,7 +4,27 @@
 	<meta charset="UTF-8">
 	<title>VBA Replacement</title>
 </head>
+
 <body>
 <h1>Vorhandene Gruppen</h1>
+<table>
+    <tr>
+        <th>Nummer</th>
+        <th>Name</th>
+        <th>Anzahl Testcases</th>
+        <th>Optionen</th>
+
+        {% for gruppe in vorhandene_gruppen %}
+        <td>{{ gruppe.nummer }}</td>
+        <td>{{ gruppe.name }}</td>
+        <td>{{ gruppe.testcases|length }}</td>
+        <td>
+            <a href="{{ url_for('gruppe', nummer='gruppe.gid', command='edit') }}">Gruppe ändern</a>,
+            <a href="{{ url_for('gruppe', nummer='gruppe.gid', command='delete') }}">Gruppe löschen</a>
+        </td>
+        {% endfor %}
+    </tr>
+</table>
+
 </body>
 </html>

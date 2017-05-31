@@ -28,6 +28,7 @@ class Gruppe(Base):
     """Eine Gruppe von Testcases die gemeinsam ausgeführt wird und üblicherweise immer einen Namespace abdeckt"""
     __tablename__ = 'gruppen'
     gid = Column(Integer, primary_key=True)
+    nummer = Column(Integer, unique=True, nullable=False, doc="Die Nummer aus dem VBA-Tool")
     name = Column(String(120), unique=True, nullable=False, doc="Der Name dieser Gruppe")
     testcases = relationship("Testcase",
                              doc="Die zu dieser Gruppe gehörenden Testcases. Ein Testcase kann immer nur zu einer Gruppe gehören.")
